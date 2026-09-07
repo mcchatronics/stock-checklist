@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>เช็คสต็อกวัตถุดิบ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Firebase (ใช้เก็บข้อมูลสต็อกแบบเรียลไทม์ ให้ทุกเครื่องเห็นข้อมูลเดียวกัน) -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --bg: #1C1B1A;
+            --surface: #262422;
+            --surface-2: #302D2A;
+            --line: #3D3934;
+            --text: #F2EDE4;
+            --text-dim: #A79E92;
+            --chili: #C1401F;
+            --chili-dim: #8C2E17;
+            --herb: #6B8F47;
+            --amber: #D9A441;
+            --radius: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Noto Sans Thai', sans-serif;
+            min-height: 100vh;
+            padding-bottom: 90px;
+        }
+
+        .num {
+            font-family: 'Bebas Neue', 'Noto Sans Thai', sans-serif;
+            letter-spacing: 0.02em;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--bg);
+            border-bottom: 1px solid var(--line);
+            padding: 16px 16px 0 16px;
+        }
+
+        .shop-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        h1 {
+            font-size: 19px;
+            margin: 0 0 2px 0;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: var(--text-dim);
+            font-size: 12.5px;
+            margin: 0 0 14px 0;
+        }
+
+        .menu-btn {
+            background: none;
+            border: 1px solid var(--line);
+            color: var(--text-dim);
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px 4px 12px 4px;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 14.5px;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tab.active {
+            color: var(--text);
+            border-bottom-color: var(--chili);
+        }
+
+        .tab .badge {
+            display: inline-block;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            background: var(--chili);
+            color: #fff;
+            border-radius: 9px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 18px;
+            margin-left: 5px;
+        }
+
+        main {
+            padding: 14px 16px 0 16px;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        .cat-heading {
+            font-size: 13px;
+            color: var(--text-dim);
+            font-weight: 600;
+            margin: 20px 0 8px 2px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .cat-heading:first-child {
+            margin-top: 4px;
+        }
+
+        .item {
+            background: var(--surface);
+            border-left: 4px solid var(--line);
+            border-radius: 8px;
+            padding: 11px 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .item.ok {
+            border-left-color: var(--herb);
+        }
+
+        .item.low {
+            border-left-color: var(--amber);
+        }
+
+        .item.out {
+            border-left-color: var(--chili);
+        }
+
+        .item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .item-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 0 0 2px 0;
+            overflow-wrap: break-word;
+        }
+
+        .item-meta {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin: 0;
+        }
+
+        .item-meta .status-tag {
+            font-weight: 600;
+        }
+
+        .status-tag.ok {
+            color: var(--herb);
+        }
+
+        .status-tag.low {
+            color: var(--amber);
+        }
+
+        .status-tag.out {
+            color: var(--chili);
+        }
+
+        .stepper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .step-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: var(--surface-2);
+            color: var(--text);
+            font-size: 19px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            user-select: none;
+        }
+
+        .step-btn:active {
+            background: var(--line);
+        }
+
+        .qty-display {
+            min-width: 40px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 400;
+        }
+
+        .del-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 2px 4px 6px;
+            flex-shrink: 0;
+        }
+
+        .add-item-card {
+            background: var(--surface);
+            border: 1px dashed var(--line);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 18px;
+            margin-bottom: 20px;
+        }
+
+        .add-toggle {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px;
+        }
+
+        .add-form {
+            display: none;
+            margin-top: 10px;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .add-form.open {
+            display: flex;
+        }
+
+        .add-form input,
+        .add-form select {
+            background: var(--surface-2);
+            border: 1px solid var(--line);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            padding: 9px 10px;
+            border-radius: 6px;
+            width: 100%;
+        }
+
+        .add-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .add-row>* {
+            flex: 1;
+        }
+
+        .save-btn {
+            background: var(--chili);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 2px;
+        }
+
+        /* Summary tab */
+        .summary-hero {
+            text-align: center;
+            padding: 18px 10px 6px 10px;
+        }
+
+        .summary-hero .big-num {
+            font-size: 56px;
+            line-height: 1;
+            color: var(--chili);
+        }
+
+        .summary-hero .big-label {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        .summary-hero.all-good .big-num {
+            color: var(--herb);
+        }
+
+        .sum-group-title {
+            font-size: 13px;
+            font-weight: 700;
+            margin: 22px 0 8px 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot.out {
+            background: var(--chili);
+        }
+
+        .dot.low {
+            background: var(--amber);
+        }
+
+        .sum-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+        }
+
+        .sum-item-name {
+            font-size: 14.5px;
+            font-weight: 600;
+        }
+
+        .sum-item-sub {
+            font-size: 11.5px;
+            color: var(--text-dim);
+            margin-top: 1px;
+        }
+
+        .sum-item-qty {
+            font-size: 13px;
+            color: var(--text-dim);
+            flex-shrink: 0;
+            margin-left: 10px;
+            text-align: right;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+
+        .empty-state .emoji {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .copy-btn {
+            display: block;
+            width: 100%;
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 22px;
+            font-family: inherit;
+            font-size: 14.5px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .copy-btn:active {
+            background: var(--line);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(0);
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--line);
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 13.5px;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-6px);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 40;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .overlay.open {
+            display: flex;
+        }
+
+        .sheet {
+            background: var(--surface);
+            width: 100%;
+            max-width: 560px;
+            border-radius: 14px 14px 0 0;
+            padding: 18px 18px 26px 18px;
+        }
+
+        .sheet h3 {
+            margin: 0 0 12px 0;
+            font-size: 16px;
+        }
+
+        .sheet p {
+            color: var(--text-dim);
+            font-size: 13.5px;
+            line-height: 1.5;
+            margin: 0 0 16px 0;
+        }
+
+        .sheet-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .sheet-btn {
+            flex: 1;
+            padding: 11px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: var(--surface-2);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .sheet-btn.danger {
+            background: var(--chili);
+            border-color: var(--chili);
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="shop-row">
+            <div>
+                <h1>เช็คสต็อกวัตถุดิบ</h1>
+                <p class="subtitle" id="subtitle">กำลังโหลดข้อมูล...</p>
+            </div>
+            <button class="menu-btn" id="menuBtn" aria-label="เมนู">⋮</button>
+        </div>
+        <div class="tabs">
+            <button class="tab active" data-tab="list">รายการวัตถุดิบ</button>
+            <button class="tab" data-tab="summary">สรุปของที่ต้องซื้อ<span class="badge" id="alertBadge"
+                    style="display:none;">0</span></button>
+        </div>
+    </header>
+
+    <main id="main">
+        <div class="loading">กำลังโหลดข้อมูล...</div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="overlay" id="menuOverlay">
+        <div class="sheet">
+            <h3>ตัวเลือก</h3>
+            <p>ข้อมูลสต็อกนี้ซิงก์แบบเรียลไทม์ทุกเครื่องที่เปิดลิงก์นี้ — พนักงานคนอื่นแก้ไข
+                คุณจะเห็นการเปลี่ยนแปลงทันทีโดยไม่ต้องรีเฟรช</p>
+            <div class="sheet-row">
+                <button class="sheet-btn" id="cancelMenuBtn">ปิด</button>
+                <button class="sheet-btn danger" id="resetBtn">รีเซ็ตเป็นค่าเริ่มต้น</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            // ===== ตั้งค่า Firebase ตรงนี้ =====
+            // เอาค่าจาก Firebase Console > Project settings > General > Your apps > SDK setup and configuration
+            const firebaseConfig = {
+                apiKey: "AIzaSyCAVUdNPk3KJAlXAgLtXWM8NnYyFIKkv5U",
+                authDomain: "shop-stock-7bb33.firebaseapp.com",
+                projectId: "shop-stock-7bb33",
+                storageBucket: "shop-stock-7bb33.firebasestorage.app",
+                messagingSenderId: "581181849491",
+                appId: "1:581181849491:web:c21e23bcec7011a7a7f266",
+                measurementId: "G-W8TCL9FSKT"
+            };
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+            // เอกสารเดียวที่เก็บสต็อกทั้งหมดของร้าน (เปลี่ยนชื่อ 'my-shop' ได้ถ้าจะใช้หลายร้าน)
+            const docRef = db.collection('inventory').doc('my-shop');
+            // ===================================
+
+            const defaultItems = () => ([
+                { id: cid(), name: 'เส้นเล็ก', category: 'เส้น', unit: 'ห่อ', qty: 8, min: 3 },
+                { id: cid(), name: 'เส้นใหญ่', category: 'เส้น', unit: 'ห่อ', qty: 5, min: 3 },
+                { id: cid(), name: 'บะหมี่เหลือง', category: 'เส้น', unit: 'ห่อ.', qty: 2, min: 2 },
+                { id: cid(), name: 'วุ้นเส้น', category: 'เส้น', unit: 'ห่อ', qty: 0, min: 3 },
+                { id: cid(), name: 'เส้นหมี่ขาว', category: 'เส้น', unit: 'ห่อ', qty: 4, min: 2 },
+
+                { id: cid(), name: 'หมูสับ', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 3, min: 2 },
+                { id: cid(), name: 'หมูชิ้น', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 1, min: 2 },
+                { id: cid(), name: 'เนื้อไก่', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 2, min: 2 },
+                { id: cid(), name: 'ลูกชิ้นหมู', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'ถุง', qty: 0, min: 2 },
+                { id: cid(), name: 'ลูกชิ้นปลา', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'ถุง', qty: 2, min: 2 },
+                { id: cid(), name: 'หมึกกรอบ', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 1, min: 1 },
+                { id: cid(), name: 'กุ้งสด', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 1, min: 1 },
+                { id: cid(), name: 'ปลาดุก', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 10, min: 4 },
+                { id: cid(), name: 'เนื้อสับ', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 10, min: 4 },
+                { id: cid(), name: 'เนื้อชิ้น', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 10, min: 4 },
+                { id: cid(), name: 'เนื้อตุ๋น', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'กก', qty: 2, min: 1 },
+                { id: cid(), name: 'หมูตุ๋น', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'กก', qty: 2, min: 1 },
+                { id: cid(), name: 'หมูกรอบ', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'กก', qty: 2, min: 1 },
+
+                { id: cid(), name: 'ผักบุ้ง', category: 'ผัก / สมุนไพร', unit: 'กำ', qty: 1, min: 1 },
+                { id: cid(), name: 'ถั่วงอก', category: 'ผัก / สมุนไพร', unit: 'กก.', qty: 1, min: 2 },
+                { id: cid(), name: 'ต้นหอม', category: 'ผัก / สมุนไพร', unit: 'กำ', qty: 3, min: 2 },
+                { id: cid(), name: 'ผักชี', category: 'ผัก / สมุนไพร', unit: 'กำ', qty: 2, min: 2 },
+                { id: cid(), name: 'กระเทียม', category: 'ผัก / สมุนไพร', unit: 'กก.', qty: 5, min: 1 },
+                { id: cid(), name: 'พริกขี้หนูสด', category: 'ผัก / สมุนไพร', unit: 'กก.', qty: 1, min: 1 },
+                { id: cid(), name: 'พริกขี้หนูแห้ง', category: 'ผัก / สมุนไพร', unit: 'กก.', qty: 1, min: 1 },
+                { id: cid(), name: 'ใบโหระพา', category: 'ผัก / สมุนไพร', unit: 'กำ', qty: 2, min: 2 },
+                { id: cid(), name: 'ใบกระเพรา', category: 'ผัก / สมุนไพร', unit: 'กำ', qty: 2, min: 2 },
+                { id: cid(), name: 'คะน้า', category: 'ผัก / สมุนไพร', unit: 'กำ', qty: 2, min: 1 },
+                { id: cid(), name: 'มะนาว', category: 'ผัก / สมุนไพร', unit: 'ลูก', qty: 20, min: 5 },
+                { id: cid(), name: 'หอมหัวใหญ่', category: 'ผัก / สมุนไพร', unit: 'ลูก', qty: 5, min: 3 },
+                { id: cid(), name: 'พริกอ่อน', category: 'ผัก / สมุนไพร', unit: 'กก', qty: 1, min: 1 },
+
+                { id: cid(), name: 'น้ำปลา', category: 'เครื่องปรุง / ซอส', unit: 'ขวด', qty: 4, min: 2 },
+                { id: cid(), name: 'ซีอิ๊วขาว', category: 'เครื่องปรุง / ซอส', unit: 'ขวด', qty: 3, min: 2 },
+                { id: cid(), name: 'ซอสหอยนางรม', category: 'เครื่องปรุง / ซอส', unit: 'ขวด', qty: 2, min: 1 },
+                { id: cid(), name: 'ผงชูรส', category: 'เครื่องปรุง / ซอส', unit: 'ห่อ', qty: 2, min: 1 },
+                { id: cid(), name: 'รสดี', category: 'เครื่องปรุง / ซอส', unit: 'ห่อ', qty: 2, min: 1 },
+                { id: cid(), name: 'น้ำตาลทราย', category: 'เครื่องปรุง / ซอส', unit: 'กก.', qty: 5, min: 2 },
+                { id: cid(), name: 'พริกแกง', category: 'เครื่องปรุง / ซอส', unit: 'กก.', qty: 1, min: 1 },
+                { id: cid(), name: 'ซีอิ้วดำ', category: 'เครื่องปรุง / ซอส', unit: 'ขวด', qty: 2, min: 1 },
+                { id: cid(), name: 'พริกป่น', category: 'เครื่องปรุง / ซอส', unit: 'ถุง', qty: 1, min: 1 },
+                { id: cid(), name: 'น้ำส้มสายชู', category: 'เครื่องปรุง / ซอส', unit: 'ขวด', qty: 2, min: 1 },
+                { id: cid(), name: 'ซอสเย็นตาโฟ', category: 'เครื่องปรุง / ซอส', unit: 'ขวด', qty: 3, min: 1 },
+                { id: cid(), name: 'ชุดพริก น้ำปลา ถุง', category: 'เครื่องปรุง / ซอส', unit: 'ถุง', qty: 20, min: 10 },
+
+                { id: cid(), name: 'ไข่ไก่', category: 'ของแห้ง / อื่นๆ', unit: 'แผง', qty: 1, min: 1 },
+                { id: cid(), name: 'กระเทียมเจียว', category: 'ของแห้ง / อื่นๆ', unit: 'ถุง', qty: 1, min: 1 },
+                { id: cid(), name: 'ถั่วลิสงป่น', category: 'ของแห้ง / อื่นๆ', unit: 'ถุง', qty: 2, min: 1 },
+                { id: cid(), name: 'น้ำมันพืช', category: 'ของแห้ง / อื่นๆ', unit: 'ขวด', qty: 3, min: 2 },
+                { id: cid(), name: 'แก๊ส', category: 'ของแห้ง / อื่นๆ', unit: 'ถัง', qty: 3, min: 1 },
+            ]);
+
+            function cid() { return 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+            let items = [];
+            let activeTab = 'list';
+            let loaded = false;
+            let saving = false;
+            let applyingRemote = false;
+
+            const mainEl = document.getElementById('main');
+            const subtitleEl = document.getElementById('subtitle');
+            const toastEl = document.getElementById('toast');
+            const alertBadge = document.getElementById('alertBadge');
+
+            function showToast(msg) {
+                toastEl.textContent = msg;
+                toastEl.classList.add('show');
+                setTimeout(() => toastEl.classList.remove('show'), 1800);
+            }
+
+            function statusOf(item) {
+                if (item.qty <= 0) return 'out';
+                if (item.qty <= item.min) return 'low';
+                return 'ok';
+            }
+
+            function subscribeToItems() {
+                docRef.onSnapshot((doc) => {
+                    applyingRemote = true;
+                    if (doc.exists && doc.data().items) {
+                        try {
+                            items = JSON.parse(doc.data().items);
+                        } catch (e) {
+                            console.error('Parse error', e);
+                        }
+                    } else if (!loaded) {
+                        // ยังไม่เคยมีข้อมูล -> สร้างค่าเริ่มต้นแล้วบันทึกขึ้นฐานข้อมูล
+                        items = defaultItems();
+                        persist();
+                    }
+                    loaded = true;
+                    render();
+                    applyingRemote = false;
+                }, (error) => {
+                    console.error('Firestore connection error', error);
+                    loaded = true;
+                    subtitleEl.textContent = 'เชื่อมต่อฐานข้อมูลไม่สำเร็จ ตรวจสอบ Firebase config';
+                    if (items.length === 0) items = defaultItems();
+                    render();
+                });
+            }
+
+            async function persist() {
+                if (applyingRemote) return; // กันไม่ให้เขียนซ้ำตอนกำลังรับข้อมูลจากเครื่องอื่น
+                saving = true;
+                updateSubtitle();
+                try {
+                    await docRef.set({
+                        items: JSON.stringify(items),
+                        updatedAt: new Date().toISOString()
+                    });
+                } catch (e) {
+                    console.error('Firestore save error', e);
+                    showToast('บันทึกไม่สำเร็จ เช็คอินเทอร์เน็ตหรือ Firebase config');
+                }
+                saving = false;
+                updateSubtitle();
+            }
+
+            function updateSubtitle() {
+                if (saving) {
+                    subtitleEl.textContent = 'กำลังบันทึก...';
+                } else {
+                    const now = new Date();
+                    const time = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                    subtitleEl.textContent = 'ซิงก์เรียลไทม์ทุกเครื่อง · อัปเดตล่าสุด ' + time;
+                }
+            }
+
+            function changeQty(id, delta) {
+                const it = items.find(x => x.id === id);
+                if (!it) return;
+                it.qty = Math.max(0, it.qty + delta);
+                render();
+                persist();
+            }
+
+            function deleteItem(id) {
+                items = items.filter(x => x.id !== id);
+                render();
+                persist();
+            }
+
+            function addItem(name, category, unit, qty, min) {
+                items.push({ id: cid(), name, category, unit, qty, min });
+                render();
+                persist();
+            }
+
+            function groupByCategory(list) {
+                const map = new Map();
+                list.forEach(it => {
+                    if (!map.has(it.category)) map.set(it.category, []);
+                    map.get(it.category).push(it);
+                });
+                return map;
+            }
+
+            function renderList() {
+                const groups = groupByCategory(items);
+                let html = '';
+                if (items.length === 0) {
+                    html += '<div class="empty-state"><span class="emoji">📋</span>ยังไม่มีรายการวัตถุดิบ<br>เพิ่มรายการแรกได้ด้านล่าง</div>';
+                } else {
+                    for (const [cat, list] of groups) {
+                        html += `<div class="cat-heading">${escapeHtml(cat)}</div>`;
+                        list.forEach(it => {
+                            const st = statusOf(it);
+                            const statusLabel = st === 'out' ? 'ของหมด' : st === 'low' ? 'ใกล้หมด' : 'ปกติ';
+                            html += `
+          <div class="item ${st}">
+            <div class="item-info">
+              <p class="item-name">${escapeHtml(it.name)}</p>
+              <p class="item-meta">ขั้นต่ำ ${it.min} ${escapeHtml(it.unit)} · <span class="status-tag ${st}">${statusLabel}</span></p>
+            </div>
+            <div class="stepper">
+              <button class="step-btn" data-action="dec" data-id="${it.id}">−</button>
+              <span class="qty-display num">${it.qty}<br><small style="font-family:'Noto Sans Thai'; font-size:10px; color:var(--text-dim);">${escapeHtml(it.unit)}</small></span>
+              <button class="step-btn" data-action="inc" data-id="${it.id}">+</button>
+            </div>
+            <button class="del-btn" data-action="del" data-id="${it.id}" aria-label="ลบ">✕</button>
+          </div>`;
+                        });
+                    }
+                }
+
+                html += `
+    <div class="add-item-card">
+      <button class="add-toggle" id="addToggle">+ เพิ่มวัตถุดิบใหม่</button>
+      <div class="add-form" id="addForm">
+        <input type="text" id="newName" placeholder="ชื่อวัตถุดิบ เช่น ผักกาดขาว">
+        <div class="add-row">
+          <input type="text" id="newCategory" placeholder="หมวดหมู่ เช่น ผัก / สมุนไพร" list="catList">
+          <input type="text" id="newUnit" placeholder="หน่วย เช่น กก., ถุง">
+        </div>
+        <datalist id="catList">
+          ${Array.from(groups.keys()).map(c => `<option value="${escapeHtml(c)}">`).join('')}
+        </datalist>
+        <div class="add-row">
+          <input type="number" id="newQty" placeholder="จำนวนคงเหลือ" min="0" step="any">
+          <input type="number" id="newMin" placeholder="จำนวนขั้นต่ำ" min="0" step="any">
+        </div>
+        <button class="save-btn" id="saveNewItem">บันทึกวัตถุดิบ</button>
+      </div>
+    </div>`;
+                mainEl.innerHTML = html;
+                attachListListeners();
+            }
+
+            function renderSummary() {
+                const out = items.filter(it => statusOf(it) === 'out');
+                const low = items.filter(it => statusOf(it) === 'low');
+                const totalAlert = out.length + low.length;
+
+                let html = '';
+                html += `<div class="summary-hero ${totalAlert === 0 ? 'all-good' : ''}">
+      <div class="big-num num">${totalAlert}</div>
+      <div class="big-label">${totalAlert === 0 ? 'ของครบ ยังไม่ต้องซื้อเพิ่ม' : 'รายการที่ต้องไปซื้อเพิ่ม'}</div>
+    </div>`;
+
+                if (out.length) {
+                    html += `<div class="sum-group-title"><span class="dot out"></span>ของหมดแล้ว (${out.length})</div>`;
+                    out.forEach(it => {
+                        html += sumItemHtml(it);
+                    });
+                }
+                if (low.length) {
+                    html += `<div class="sum-group-title"><span class="dot low"></span>ใกล้หมด (${low.length})</div>`;
+                    low.forEach(it => {
+                        html += sumItemHtml(it);
+                    });
+                }
+                if (totalAlert === 0) {
+                    html += `<div class="empty-state"><span class="emoji">✅</span>วัตถุดิบทุกอย่างอยู่ในเกณฑ์ปกติ</div>`;
+                } else {
+                    html += `<button class="copy-btn" id="copyListBtn">📋 คัดลอกรายการไปซื้อของ</button>`;
+                }
+                mainEl.innerHTML = html;
+
+                const copyBtn = document.getElementById('copyListBtn');
+                if (copyBtn) {
+                    copyBtn.addEventListener('click', () => {
+                        const lines = [];
+                        if (out.length) {
+                            lines.push('ของหมดแล้ว:');
+                            out.forEach(it => lines.push(`- ${it.name} (เหลือ 0 ${it.unit}, ขั้นต่ำ ${it.min})`));
+                        }
+                        if (low.length) {
+                            if (lines.length) lines.push('');
+                            lines.push('ใกล้หมด:');
+                            low.forEach(it => lines.push(`- ${it.name} (เหลือ ${it.qty} ${it.unit}, ขั้นต่ำ ${it.min})`));
+                        }
+                        const text = lines.join('\n');
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(text).then(() => {
+                                showToast('คัดลอกรายการแล้ว');
+                            }).catch(() => {
+                                fallbackCopy(text);
+                            });
+                        } else {
+                            fallbackCopy(text);
+                        }
+                    });
+                }
+            }
+
+            function fallbackCopy(text) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); showToast('คัดลอกรายการแล้ว'); }
+                catch (e) { showToast('คัดลอกไม่สำเร็จ'); }
+                document.body.removeChild(ta);
+            }
+
+            function sumItemHtml(it) {
+                return `<div class="sum-item">
+      <div>
+        <div class="sum-item-name">${escapeHtml(it.name)}</div>
+        <div class="sum-item-sub">${escapeHtml(it.category)}</div>
+      </div>
+      <div class="sum-item-qty">เหลือ ${it.qty} ${escapeHtml(it.unit)}<br>ขั้นต่ำ ${it.min}</div>
+    </div>`;
+            }
+
+            function escapeHtml(s) {
+                return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            }
+
+            function attachListListeners() {
+                mainEl.querySelectorAll('[data-action="inc"]').forEach(b => {
+                    b.addEventListener('click', () => changeQty(b.dataset.id, 1));
+                });
+                mainEl.querySelectorAll('[data-action="dec"]').forEach(b => {
+                    b.addEventListener('click', () => changeQty(b.dataset.id, -1));
+                });
+                mainEl.querySelectorAll('[data-action="del"]').forEach(b => {
+                    b.addEventListener('click', () => {
+                        if (confirm('ลบรายการนี้ออกจากสต็อก?')) deleteItem(b.dataset.id);
+                    });
+                });
+                const addToggle = document.getElementById('addToggle');
+                const addForm = document.getElementById('addForm');
+                if (addToggle) {
+                    addToggle.addEventListener('click', () => {
+                        addForm.classList.toggle('open');
+                    });
+                }
+                const saveNewItem = document.getElementById('saveNewItem');
+                if (saveNewItem) {
+                    saveNewItem.addEventListener('click', () => {
+                        const name = document.getElementById('newName').value.trim();
+                        const category = document.getElementById('newCategory').value.trim() || 'อื่นๆ';
+                        const unit = document.getElementById('newUnit').value.trim() || 'ชิ้น';
+                        const qty = parseFloat(document.getElementById('newQty').value) || 0;
+                        const min = parseFloat(document.getElementById('newMin').value) || 0;
+                        if (!name) {
+                            showToast('กรุณาใส่ชื่อวัตถุดิบ');
+                            return;
+                        }
+                        addItem(name, category, unit, qty, min);
+                        showToast('เพิ่มวัตถุดิบแล้ว');
+                    });
+                }
+            }
+
+            function render() {
+                if (!loaded) {
+                    mainEl.innerHTML = '<div class="loading">กำลังโหลดข้อมูล...</div>';
+                    return;
+                }
+                updateSubtitle();
+                const out = items.filter(it => statusOf(it) === 'out').length;
+                const low = items.filter(it => statusOf(it) === 'low').length;
+                const totalAlert = out + low;
+                if (totalAlert > 0) {
+                    alertBadge.style.display = 'inline-block';
+                    alertBadge.textContent = totalAlert;
+                } else {
+                    alertBadge.style.display = 'none';
+                }
+                if (activeTab === 'list') renderList();
+                else renderSummary();
+            }
+
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    activeTab = tab.dataset.tab;
+                    render();
+                });
+            });
+
+            // menu overlay
+            const menuOverlay = document.getElementById('menuOverlay');
+            document.getElementById('menuBtn').addEventListener('click', () => menuOverlay.classList.add('open'));
+            document.getElementById('cancelMenuBtn').addEventListener('click', () => menuOverlay.classList.remove('open'));
+            document.getElementById('resetBtn').addEventListener('click', async () => {
+                if (confirm('รีเซ็ตข้อมูลทั้งหมดกลับเป็นค่าเริ่มต้น? การกระทำนี้ย้อนกลับไม่ได้')) {
+                    items = defaultItems();
+                    menuOverlay.classList.remove('open');
+                    render();
+                    await persist();
+                    showToast('รีเซ็ตข้อมูลแล้ว');
+                }
+            });
+
+            subscribeToItems();
+        })();
+    </script>
+</body>
+
+</html>
