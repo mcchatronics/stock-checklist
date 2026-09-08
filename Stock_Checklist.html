@@ -558,7 +558,6 @@
     <script>
         (function () {
             // ===== ตั้งค่า Firebase ตรงนี้ =====
-            // เอาค่าจาก Firebase Console > Project settings > General > Your apps > SDK setup and configuration
             const firebaseConfig = {
                 apiKey: "AIzaSyCAVUdNPk3KJAlXAgLtXWM8NnYyFIKkv5U",
                 authDomain: "shop-stock-7bb33.firebaseapp.com",
@@ -570,63 +569,59 @@
             };
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
-            // เอกสารเดียวที่เก็บสต็อกทั้งหมดของร้าน (เปลี่ยนชื่อ 'my-shop' ได้ถ้าจะใช้หลายร้าน)
             const docRef = db.collection('inventory').doc('my-shop');
             // ===================================
 
             const defaultItems = () => ([
-                { id: cid(), name: 'เส้นเล็ก', category: 'เส้น', unit: 'ห่อ', qty: 8, min: 3 },
-                { id: cid(), name: 'เส้นใหญ่', category: 'เส้น', unit: 'ห่อ', qty: 5, min: 3 },
-                { id: cid(), name: 'บะหมี่เหลือง', category: 'เส้น', unit: 'ห่อ.', qty: 2, min: 2 },
-                { id: cid(), name: 'วุ้นเส้น', category: 'เส้น', unit: 'ห่อ', qty: 0, min: 3 },
-                { id: cid(), name: 'เส้นหมี่ขาว', category: 'เส้น', unit: 'ห่อ', qty: 4, min: 2 },
+                { id: cid(), name: 'เส้นเล็ก', category: 'ก๋วยเตี๋ยว', unit: 'ห่อ', qty: 8, min: 3 },
+                { id: cid(), name: 'เส้นใหญ่', category: 'ก๋วยเตี๋ยว', unit: 'ห่อ', qty: 5, min: 3 },
+                { id: cid(), name: 'บะหมี่เหลือง', category: 'ก๋วยเตี๋ยว', unit: 'ห่อ.', qty: 2, min: 2 },
+                { id: cid(), name: 'วุ้นเส้น', category: 'ก๋วยเตี๋ยว', unit: 'ห่อ', qty: 0, min: 3 },
+                { id: cid(), name: 'เส้นหมี่ขาว', category: 'ก๋วยเตี๋ยว', unit: 'ห่อ', qty: 4, min: 2 },
+                { id: cid(), name: 'ลูกชิ้นหมู', category: 'ก๋วยเตี๋ยว', unit: 'ถุง', qty: 2, min: 1 },
+                { id: cid(), name: 'ลูกชิ้นปลา', category: 'ก๋วยเตี๋ยว', unit: 'ถุง', qty: 2, min: 1 },
+                { id: cid(), name: 'เนื้อตุ๋น', category: 'ก๋วยเตี๋ยว', unit: 'กก', qty: 2, min: 1 },
+                { id: cid(), name: 'หมูตุ๋น', category: 'ก๋วยเตี๋ยว', unit: 'กก', qty: 2, min: 1 },
+                { id: cid(), name: 'หมูกรอบ', category: 'ก๋วยเตี๋ยว', unit: 'กก', qty: 2, min: 1 },
+                { id: cid(), name: 'ผักบุ้ง', category: 'ก๋วยเตี๋ยว', unit: 'กำ', qty: 1, min: 1 },
+                { id: cid(), name: 'ถั่วงอก', category: 'ก๋วยเตี๋ยว', unit: 'กก.', qty: 1, min: 1 },
+                { id: cid(), name: 'ต้นหอม', category: 'ก๋วยเตี๋ยว', unit: 'กำ', qty: 3, min: 1 },
+                { id: cid(), name: 'ผักชี', category: 'ก๋วยเตี๋ยว', unit: 'กำ', qty: 2, min: 1 },
+                { id: cid(), name: 'น้ำปลา', category: 'ก๋วยเตี๋ยว', unit: 'ขวด', qty: 4, min: 2 },
+                { id: cid(), name: 'น้ำตาลทราย', category: 'ก๋วยเตี๋ยว', unit: 'กก.', qty: 5, min: 2 },
+                { id: cid(), name: 'พริกป่น', category: 'ก๋วยเตี๋ยว', unit: 'ถุง', qty: 1, min: 1 },
+                { id: cid(), name: 'น้ำส้มสายชู', category: 'ก๋วยเตี๋ยว', unit: 'ขวด', qty: 2, min: 1 },
+                { id: cid(), name: 'ซอสเย็นตาโฟ', category: 'ก๋วยเตี๋ยว', unit: 'ขวด', qty: 3, min: 1 },
+                { id: cid(), name: 'ชุดพริก น้ำปลา ถุง', category: 'ก๋วยเตี๋ยว', unit: 'ถุง', qty: 20, min: 10 },
+                { id: cid(), name: 'กระเทียมเจียว', category: 'ก๋วยเตี๋ยว', unit: 'ถุง', qty: 1, min: 1 },
+                { id: cid(), name: 'ถั่วลิสงป่น', category: 'ก๋วยเตี๋ยว', unit: 'ถุง', qty: 2, min: 1 },
 
-                { id: cid(), name: 'หมูสับ', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 3, min: 5 },
-                { id: cid(), name: 'หมูชิ้น', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 1, min: 5 },
-                { id: cid(), name: 'เนื้อไก่', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 2, min: 5 },
-                { id: cid(), name: 'ลูกชิ้นหมู', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'ถุง', qty: 2, min: 1 },
-                { id: cid(), name: 'ลูกชิ้นปลา', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'ถุง', qty: 2, min: 1 },
-                { id: cid(), name: 'หมึกกรอบ', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 1, min: 1 },
-                { id: cid(), name: 'กุ้งสด', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 1, min: 5 },
-                { id: cid(), name: 'ปลาดุก', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 10, min: 4 },
-                { id: cid(), name: 'เนื้อสับ', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 10, min: 5 },
-                { id: cid(), name: 'เนื้อชิ้น', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'แพ็ก', qty: 10, min: 5 },
-                { id: cid(), name: 'เนื้อตุ๋น', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'กก', qty: 2, min: 1 },
-                { id: cid(), name: 'หมูตุ๋น', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'กก', qty: 2, min: 1 },
-                { id: cid(), name: 'หมูกรอบ', category: 'เนื้อสัตว์ / ลูกชิ้น', unit: 'กก', qty: 2, min: 1 },
-
-                { id: cid(), name: 'ผักบุ้ง', category: 'ผัก / สมุนไพร', unit: 'กำ', qty: 1, min: 1 },
-                { id: cid(), name: 'ถั่วงอก', category: 'ผัก / สมุนไพร', unit: 'กก.', qty: 1, min: 1 },
-                { id: cid(), name: 'ต้นหอม', category: 'ผัก / สมุนไพร', unit: 'กำ', qty: 3, min: 1 },
-                { id: cid(), name: 'ผักชี', category: 'ผัก / สมุนไพร', unit: 'กำ', qty: 2, min: 1 },
-                { id: cid(), name: 'กระเทียม', category: 'ผัก / สมุนไพร', unit: 'กก.', qty: 5, min: 1 },
-                { id: cid(), name: 'พริกขี้หนูสด', category: 'ผัก / สมุนไพร', unit: 'กก.', qty: 1, min: 1 },
-                { id: cid(), name: 'พริกขี้หนูแห้ง', category: 'ผัก / สมุนไพร', unit: 'กก.', qty: 1, min: 1 },
-                { id: cid(), name: 'ใบโหระพา', category: 'ผัก / สมุนไพร', unit: 'กำ', qty: 2, min: 2 },
-                { id: cid(), name: 'ใบกระเพรา', category: 'ผัก / สมุนไพร', unit: 'กำ', qty: 2, min: 2 },
-                { id: cid(), name: 'คะน้า', category: 'ผัก / สมุนไพร', unit: 'กำ', qty: 2, min: 1 },
-                { id: cid(), name: 'มะนาว', category: 'ผัก / สมุนไพร', unit: 'ลูก', qty: 20, min: 5 },
-                { id: cid(), name: 'หอมหัวใหญ่', category: 'ผัก / สมุนไพร', unit: 'ลูก', qty: 5, min: 3 },
-                { id: cid(), name: 'พริกอ่อน', category: 'ผัก / สมุนไพร', unit: 'กก', qty: 1, min: 1 },
-
-                { id: cid(), name: 'น้ำปลา', category: 'เครื่องปรุง / ซอส', unit: 'ขวด', qty: 4, min: 2 },
-                { id: cid(), name: 'ซีอิ๊วขาว', category: 'เครื่องปรุง / ซอส', unit: 'ขวด', qty: 3, min: 2 },
-                { id: cid(), name: 'ซอสหอยนางรม', category: 'เครื่องปรุง / ซอส', unit: 'แกนลอน', qty: 2, min: 1 },
-                { id: cid(), name: 'ผงชูรส', category: 'เครื่องปรุง / ซอส', unit: 'ห่อ', qty: 2, min: 1 },
-                { id: cid(), name: 'รสดี', category: 'เครื่องปรุง / ซอส', unit: 'ห่อ', qty: 2, min: 1 },
-                { id: cid(), name: 'น้ำตาลทราย', category: 'เครื่องปรุง / ซอส', unit: 'กก.', qty: 5, min: 2 },
-                { id: cid(), name: 'พริกแกง', category: 'เครื่องปรุง / ซอส', unit: 'กก.', qty: 1, min: 1 },
-                { id: cid(), name: 'ซีอิ้วดำ', category: 'เครื่องปรุง / ซอส', unit: 'ขวด', qty: 2, min: 1 },
-                { id: cid(), name: 'พริกป่น', category: 'เครื่องปรุง / ซอส', unit: 'ถุง', qty: 1, min: 1 },
-                { id: cid(), name: 'น้ำส้มสายชู', category: 'เครื่องปรุง / ซอส', unit: 'ขวด', qty: 2, min: 1 },
-                { id: cid(), name: 'ซอสเย็นตาโฟ', category: 'เครื่องปรุง / ซอส', unit: 'ขวด', qty: 3, min: 1 },
-                { id: cid(), name: 'ชุดพริก น้ำปลา ถุง', category: 'เครื่องปรุง / ซอส', unit: 'ถุง', qty: 20, min: 10 },
-
-                { id: cid(), name: 'ไข่ไก่', category: 'ของแห้ง / อื่นๆ', unit: 'แผง', qty: 3, min: 1 },
-                { id: cid(), name: 'กระเทียมเจียว', category: 'ของแห้ง / อื่นๆ', unit: 'ถุง', qty: 1, min: 1 },
-                { id: cid(), name: 'ถั่วลิสงป่น', category: 'ของแห้ง / อื่นๆ', unit: 'ถุง', qty: 2, min: 1 },
-                { id: cid(), name: 'น้ำมันพืช', category: 'ของแห้ง / อื่นๆ', unit: 'ขวด', qty: 3, min: 2 },
-                { id: cid(), name: 'แก๊ส', category: 'ของแห้ง / อื่นๆ', unit: 'ถัง', qty: 3, min: 1 },
+                { id: cid(), name: 'หมูสับ', category: 'อาหารตามสั่ง', unit: 'แพ็ก', qty: 3, min: 5 },
+                { id: cid(), name: 'หมูชิ้น', category: 'อาหารตามสั่ง', unit: 'แพ็ก', qty: 1, min: 5 },
+                { id: cid(), name: 'เนื้อไก่', category: 'อาหารตามสั่ง', unit: 'แพ็ก', qty: 2, min: 5 },
+                { id: cid(), name: 'หมึกกรอบ', category: 'อาหารตามสั่ง', unit: 'แพ็ก', qty: 1, min: 1 },
+                { id: cid(), name: 'กุ้งสด', category: 'อาหารตามสั่ง', unit: 'แพ็ก', qty: 1, min: 5 },
+                { id: cid(), name: 'ปลาดุก', category: 'อาหารตามสั่ง', unit: 'แพ็ก', qty: 10, min: 4 },
+                { id: cid(), name: 'เนื้อสับ', category: 'อาหารตามสั่ง', unit: 'แพ็ก', qty: 10, min: 5 },
+                { id: cid(), name: 'เนื้อชิ้น', category: 'อาหารตามสั่ง', unit: 'แพ็ก', qty: 10, min: 5 },
+                { id: cid(), name: 'กระเทียม', category: 'อาหารตามสั่ง', unit: 'กก.', qty: 5, min: 1 },
+                { id: cid(), name: 'พริกขี้หนูสด', category: 'อาหารตามสั่ง', unit: 'กก.', qty: 1, min: 1 },
+                { id: cid(), name: 'พริกขี้หนูแห้ง', category: 'อาหารตามสั่ง', unit: 'กก.', qty: 1, min: 1 },
+                { id: cid(), name: 'ใบโหระพา', category: 'อาหารตามสั่ง', unit: 'กำ', qty: 2, min: 2 },
+                { id: cid(), name: 'ใบกระเพรา', category: 'อาหารตามสั่ง', unit: 'กำ', qty: 2, min: 2 },
+                { id: cid(), name: 'คะน้า', category: 'อาหารตามสั่ง', unit: 'กำ', qty: 2, min: 1 },
+                { id: cid(), name: 'มะนาว', category: 'อาหารตามสั่ง', unit: 'ลูก', qty: 20, min: 5 },
+                { id: cid(), name: 'หอมหัวใหญ่', category: 'อาหารตามสั่ง', unit: 'ลูก', qty: 5, min: 3 },
+                { id: cid(), name: 'พริกอ่อน', category: 'อาหารตามสั่ง', unit: 'กก', qty: 1, min: 1 },
+                { id: cid(), name: 'ซีอิ๊วขาว', category: 'อาหารตามสั่ง', unit: 'ขวด', qty: 3, min: 2 },
+                { id: cid(), name: 'ซอสหอยนางรม', category: 'อาหารตามสั่ง', unit: 'แกนลอน', qty: 2, min: 1 },
+                { id: cid(), name: 'ผงชูรส', category: 'อาหารตามสั่ง', unit: 'ห่อ', qty: 2, min: 1 },
+                { id: cid(), name: 'รสดี', category: 'อาหารตามสั่ง', unit: 'ห่อ', qty: 2, min: 1 },
+                { id: cid(), name: 'พริกแกง', category: 'อาหารตามสั่ง', unit: 'กก.', qty: 1, min: 1 },
+                { id: cid(), name: 'ซีอิ้วดำ', category: 'อาหารตามสั่ง', unit: 'ขวด', qty: 2, min: 1 },
+                { id: cid(), name: 'ไข่ไก่', category: 'อาหารตามสั่ง', unit: 'แผง', qty: 3, min: 1 },
+                { id: cid(), name: 'น้ำมันพืช', category: 'อาหารตามสั่ง', unit: 'ขวด', qty: 3, min: 2 },
+                { id: cid(), name: 'แก๊ส', category: 'อาหารตามสั่ง', unit: 'ถัง', qty: 3, min: 1 },
             ]);
 
             function cid() { return 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
@@ -664,7 +659,6 @@
                             console.error('Parse error', e);
                         }
                     } else if (!loaded) {
-                        // ยังไม่เคยมีข้อมูล -> สร้างค่าเริ่มต้นแล้วบันทึกขึ้นฐานข้อมูล
                         items = defaultItems();
                         persist();
                     }
@@ -681,7 +675,7 @@
             }
 
             async function persist() {
-                if (applyingRemote) return; // กันไม่ให้เขียนซ้ำตอนกำลังรับข้อมูลจากเครื่องอื่น
+                if (applyingRemote) return;
                 saving = true;
                 updateSubtitle();
                 try {
@@ -770,7 +764,7 @@
       <div class="add-form" id="addForm">
         <input type="text" id="newName" placeholder="ชื่อวัตถุดิบ เช่น ผักกาดขาว">
         <div class="add-row">
-          <input type="text" id="newCategory" placeholder="หมวดหมู่ เช่น ผัก / สมุนไพร" list="catList">
+          <input type="text" id="newCategory" placeholder="หมวดหมู่ เช่น ก๋วยเตี๋ยว" list="catList">
           <input type="text" id="newUnit" placeholder="หน่วย เช่น กก., ถุง">
         </div>
         <datalist id="catList">
@@ -893,7 +887,7 @@
                 if (saveNewItem) {
                     saveNewItem.addEventListener('click', () => {
                         const name = document.getElementById('newName').value.trim();
-                        const category = document.getElementById('newCategory').value.trim() || 'อื่นๆ';
+                        const category = document.getElementById('newCategory').value.trim() || 'อาหารตามสั่ง';
                         const unit = document.getElementById('newUnit').value.trim() || 'ชิ้น';
                         const qty = parseFloat(document.getElementById('newQty').value) || 0;
                         const min = parseFloat(document.getElementById('newMin').value) || 0;
@@ -935,7 +929,6 @@
                 });
             });
 
-            // menu overlay
             const menuOverlay = document.getElementById('menuOverlay');
             document.getElementById('menuBtn').addEventListener('click', () => menuOverlay.classList.add('open'));
             document.getElementById('cancelMenuBtn').addEventListener('click', () => menuOverlay.classList.remove('open'));
